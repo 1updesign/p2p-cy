@@ -1,15 +1,18 @@
-var host = "http://192.168.1.3:8888/";
+var host = "http://localhost:8888/";
 var interval = 1000;
 var cy;
 var layout_opts = {
   // circle, animated
-  name: 'circle',
+  name: 'cola',
   fit: true,
   idealEdgeLength: 100,
   nodeOverlap: 20,
   animate: true,
-  animationDuration: 800,
-  animationEasing: 'ease-out-quint'
+  animationDuration: 12200,
+  // animationEasing: 'ease-out-quint',
+  randomize: false,
+  maxSimulationTime: 10500,
+  nodeSpacing: 30
 }
 
 var initialiseServer = function(){
