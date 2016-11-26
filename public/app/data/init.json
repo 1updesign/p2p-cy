@@ -301,5 +301,16 @@
       "group": "edges"
     }
   ],
-  "remove": []
+  "remove": [
+      {
+        "data": {
+          "id": "af2f-4789",
+          "source": "af2f",
+          "target": "4789",
+          "on": true
+        },
+        "classes": "",
+        "group": "edges"
+      }
+  ]
 }

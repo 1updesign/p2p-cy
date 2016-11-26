@@ -1,5 +1,4 @@
-var host = "http://localhost:8888/";
-var interval = 1000;
+var interval = 2000;
 var cy;
 var layout_opts = {
   // circle, animated
@@ -26,8 +25,7 @@ var initialiseServer = function(){
 var getNodes = function(){
   return $.ajax({
     dataType: "json",
-    // url: "init.json",
-    url: host+"0/",
+    url: "/app/data/init.json",
     method: "GET",
   });
 };
@@ -90,37 +88,34 @@ var initialiseCy = function(initialNodes){
           'opacity': 0.25,
           'text-opacity': 0
         }
-      },    
+      },
     ],
     elements: initialNodes
   });
 };
 
-var updateCy = function(journal){
+var updateCy = function(journal) {
     if (journal.add.length > 0) {
-      console.log("add", JSON.stringify(journal.add.length))
+      console.log("add", JSON.stringify(journal.add.length));
       cy.add(journal.add);
     };
-  
+
     if (journal.remove.length > 0) {
-      console.log("rm", JSON.stringify(journal.remove.length))
-      cy.remove('#'+journal.remove.join(",#"));
+      console.log("rm", JSON.stringify(journal.remove.length));
+      var randEle = cy.elements()[Math.floor(Math.random() * cy.elements().length)];
+      cy.remove(randEle);
     };
-  
+
     var layout = cy.makeLayout(layout_opts);
     layout.run();
 }
 
-$(function(){
-  initialiseServer().then({},function(response){
-    console.log('server intialised');
+$(function() {
     var initialNodes = false;
-    setTimeout(function(){
-      getNodes().then(function(response){
-        initialiseCy(response.add);
-        setInterval(function(){getNodes().then(function(response){updateCy(response);})}, interval);
-      },ajax_error_handler)
-    },1000)
-    
-  },ajax_error_handler)
+    setTimeout(function() {
+        getNodes().then(function(response) {
+            initialiseCy(response.add);
+            setInterval(function() { getNodes().then(function(response) { updateCy(response) }) }, interval);
+        }, ajax_error_handler);
+    }, 1000);
 });
