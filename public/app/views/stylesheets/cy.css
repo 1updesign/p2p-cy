@@ -16,12 +16,13 @@ body {
 }
 
 .sidebar {
-  height:80vh;
-  width:40vh;
+  height:78vh;
+  width:38vh;
   float:left;
   margin: 10px 0px;  
   border: solid 1pt #2b2a2a;
   color: lightgrey;
+  padding:1vh;
 }
 
 h1 {
@@ -32,4 +33,12 @@ h1 {
   padding-bottom:15px;
   margin-bottom:10px;
   border-bottom: 1px solid lightgrey;
+}
+
+p{
+  margin-left:10px;
+}
+
+a{
+  cursor: pointer;
 }
