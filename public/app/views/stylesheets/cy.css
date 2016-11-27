@@ -16,7 +16,7 @@ body {
 }
 
 .sidebar {
-  height:78vh;
+  height:80vh;
   width:38vh;
   float:left;
   margin: 10px 0px;  
@@ -41,4 +41,8 @@ p{
 
 a{
   cursor: pointer;
+}
+
+label{
+  margin-right:15px;
 }

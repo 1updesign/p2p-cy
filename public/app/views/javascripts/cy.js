@@ -5,14 +5,15 @@ var interval = 1000;
 var pausePolling = false;
 var cy;
 
-var layout_opts = {
+var layoutOpts = {
   // circle, animated
   name: 'cola',
   fit: true,
-  idealEdgeLength: 100,
+  // idealEdgeLength: 100,
   nodeOverlap: 20,
   animate: true,
   animationDuration: 12200,
+  edgeLengthVal: 45,
   // animationEasing: 'ease-out-quint',
   randomize: false,
   maxSimulationTime: 10500,
@@ -40,7 +41,7 @@ var selectedCollection = function (){
   return cy.nodes('.selected');
 };
 
-var addNodeEvents = function(){
+var addSelectNodeEvents = function(){
   cy.nodes().on("click", function(e){
     // cy.layout().stop();
     pausePolling = true;
@@ -55,6 +56,63 @@ var addNodeEvents = function(){
   });
 }
 
+var initSlider = function(params){
+  var p = $("input#"+params.id).slider(
+    { 
+      max: params.max,
+      min: params.min
+    }
+    ).on('slide', function(){
+      layoutOpts[ params.paramName ] = p.getValue();
+      cy.layout().stop();
+      layout = cy.makeLayout(layoutOpts);
+      layout.run();
+    } ).data('slider');;
+}
+
+var addControlEvents = function(){
+
+  var sliders = [
+    {
+      id: "edgeLengthVal_slider",
+      min: 1,
+      max: 200,
+      paramName: 'edgeLengthVal'
+    },
+    // {
+    //   id: "idealEdgeLength_slider",
+    //   min: 1,
+    //   max: 200,
+    //   paramName: 'idealEdgeLength'
+    // },
+    {
+      id: "nodeOverlap_slider",
+      min: 1,
+      max: 200,
+      paramName: 'nodeOverlap'
+    },
+    {
+      id: "nodeSpacing_slider",
+      min: 1,
+      max: 200,
+      paramName: 'nodeSpacing'
+    }
+  ]
+
+  for (var i = sliders.length - 1; i >= 0; i--) {
+    initSlider(sliders[i]);
+  }
+
+  $('#randomise_node_position').on('click',function(){
+      cy.layout().stop();
+      layoutOpts['randomize'] = true; 
+      layout = cy.makeLayout( layoutOpts );
+      layout.run();
+      layoutOpts['randomize'] = false; 
+  })
+
+}
+
 var ajax_error_handler = function(e){
   console.error(e)
 };
@@ -65,7 +123,7 @@ var initialiseCy = function(initialNodes){
     motionBlur: true,
     // container: document.getElementById('cy'), // container to render in
 
-    layout: layout_opts,
+    layout: layoutOpts,
 
     style: [ // the stylesheet for the graph
       {
@@ -137,7 +195,7 @@ var updateCy = function(journal){
       cy.remove('#'+journal.remove.join(",#"));
     };
   
-    var layout = cy.makeLayout(layout_opts);
+    var layout = cy.makeLayout(layoutOpts);
     layout.run();
 }
 
@@ -162,7 +220,8 @@ $(function(){
     setTimeout(function(){
       getNodes().then(function(response){
         initialiseCy(response.add);
-        addNodeEvents();
+        addSelectNodeEvents();
+        addControlEvents();
         pollForNodes();
       },ajax_error_handler)
     },initialInterval)
