@@ -1,9 +1,10 @@
+// http://stackoverflow.com/questions/37437690/cytoscape-js-cose-layout-with-animation
+
 var host = "http://localhost:8888/";
-var pause = false;
 var initialInterval = 100;
 var interval = 1000;
-var pausePolling = false;
 var cy;
+var layout;
 
 var layoutOpts = {
   // circle, animated
@@ -17,7 +18,36 @@ var layoutOpts = {
   // animationEasing: 'ease-out-quint',
   randomize: false,
   maxSimulationTime: 10500,
-  nodeSpacing: 30
+  nodeSpacing: 144
+}
+
+
+var polling = false;
+
+var isPolling = function(){
+  return polling == true;
+}
+
+var startPolling = function(){
+  $('#polling_control').html('stop polling');
+  polling = true;
+  pollForNodes();
+  return;
+}
+
+var stopPolling = function(){
+    $('#polling_control').html('restart polling');
+    polling = false;
+    return;
+}
+
+var togglePolling = function(){
+  if(isPolling()){
+    stopPolling();
+  }else{
+    startPolling();
+  }
+  return
 }
 
 var initialiseServer = function(){
@@ -44,13 +74,23 @@ var selectedCollection = function (){
 var addSelectNodeEvents = function(){
   cy.nodes().on("click", function(e){
     // cy.layout().stop();
-    pausePolling = true;
+    stopPolling();
+
+    var ce = e.cyTarget.connectedEdges();
 
     if(e.cyTarget.hasClass('selected')){
+      for (var i = ce.length - 1; i >= 0; i--) {
+        ce[i].removeClass('selected');
+      }
       e.cyTarget.removeClass('selected');
     }else{
+      for (var i = ce.length - 1; i >= 0; i--) {
+        ce[i].addClass('selected');
+      }
       e.cyTarget.addClass('selected');
     }
+
+
 
     console.log(selectedCollection().length, "nodes selected")
   });
@@ -62,12 +102,13 @@ var initSlider = function(params){
       max: params.max,
       min: params.min
     }
-    ).on('slide', function(){
+    ).on('slideStop', function(){
+      console.log(p.getValue())
       layoutOpts[ params.paramName ] = p.getValue();
       cy.layout().stop();
       layout = cy.makeLayout(layoutOpts);
       layout.run();
-    } ).data('slider');;
+    } ).data('slider');
 }
 
 var addControlEvents = function(){
@@ -79,12 +120,12 @@ var addControlEvents = function(){
       max: 200,
       paramName: 'edgeLengthVal'
     },
-    // {
-    //   id: "idealEdgeLength_slider",
-    //   min: 1,
-    //   max: 200,
-    //   paramName: 'idealEdgeLength'
-    // },
+    {
+      id: "idealEdgeLength_slider",
+      min: 1,
+      max: 200,
+      paramName: 'idealEdgeLength'
+    },
     {
       id: "nodeOverlap_slider",
       min: 1,
@@ -121,9 +162,8 @@ var initialiseCy = function(initialNodes){
   cy = cytoscape({
     container: $('#cy'), // container to render in
     motionBlur: true,
-    // container: document.getElementById('cy'), // container to render in
 
-    layout: layoutOpts,
+    // layout: layoutOpts,
 
     style: [ // the stylesheet for the graph
       {
@@ -131,7 +171,7 @@ var initialiseCy = function(initialNodes){
         style: {
           'shape': 'hexagon',
           'content': 'data(id)',
-          "font-size":"20px",
+          "font-size":"40px",
           "text-valign":"center",
           "text-halign":"center",
           "background-color":"#000",
@@ -140,8 +180,8 @@ var initialiseCy = function(initialNodes){
           "color":"orange",
           "overlay-padding":"8px",
           "z-index":"10",
-          "width": "110px",
-          "height": "100px",
+          "width": "220px",
+          "height": "200px",
           "border-width": "2px",
           "border-color": "orange"
         }
@@ -176,9 +216,10 @@ var initialiseCy = function(initialNodes){
         selector: '.selected',
         style: {
           "color": "lightblue",
-          "border-color": "lightblue" 
+          "border-color": "lightblue",
+          'line-color': 'blue',
         }
-      }   
+      }
     ],
     elements: initialNodes
   });
@@ -195,16 +236,15 @@ var updateCy = function(journal){
       cy.remove('#'+journal.remove.join(",#"));
     };
   
-    var layout = cy.makeLayout(layoutOpts);
+    layout = cy.makeLayout(layoutOpts);
     layout.run();
 }
 
 var pollForNodes = function(){
-    pausePolling = false;
     setTimeout(function(){
       getNodes().then(
         function(response){
-          if(!pausePolling){
+          if(isPolling()){
             updateCy(response);
             pollForNodes();
           }
@@ -222,13 +262,16 @@ $(function(){
         initialiseCy(response.add);
         addSelectNodeEvents();
         addControlEvents();
-        pollForNodes();
+        startPolling();
       },ajax_error_handler)
     },initialInterval)
     
   },ajax_error_handler);
 
-  $('#restart_polling').on('click',function(){ pollForNodes();})
+  $('#polling_control').on('click',function(e){ 
+    togglePolling();
+  });
+
   $('#connect_nodes').on('click',function(){ 
       var selectedNodeIds = $.map(selectedCollection(), function(node){ return node.data().id; })
       alert(selectedCollection().length + ' nodes selected with id\'s: '+selectedNodeIds);
